@@ -21,6 +21,7 @@ def readme():
 
 version_file = 'mmdet/version.py'
 
+
 def get_version():
     with open(version_file, 'r') as f:
         exec(compile(f.read(), version_file, 'exec'))
