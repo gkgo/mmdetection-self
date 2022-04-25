@@ -10,7 +10,7 @@ model = dict(
         norm_eval=True,
         style='pytorch',
         init_cfg=dict(
-            type='Pretrained', checkpoint='checkpoints/epoch_12 (1).pth'),
+            type='Pretrained', checkpoint='open-mmlab://resnext101_32x4d'),
         groups=32,
         base_width=4),
     neck=dict(
@@ -186,7 +186,47 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
+    dict(
+        type='Albu',
+        transforms=[
+            dict(
+                type='ShiftScaleRotate',
+                shift_limit=0.0625,
+                scale_limit=0.0,
+                rotate_limit=180,
+                interpolation=1,
+                p=0.5),
+            # dict(
+            #     type='RandomBrightnessContrast',
+            #     brightness_limit=[0.1, 0.3],
+            #     contrast_limit=[0.1, 0.3],
+            #     p=0.2),
+            # dict(
+            #     type='RandomBrightnessContrast',
+            #     brightness_limit=[0.1, 0.3],
+            #     contrast_limit=[0.1, 0.3],
+            #     p=0.2),
+            # dict(type='ChannelShuffle', p=0.1),
+            # dict(
+            #     type='OneOf',
+            #     transforms=[
+            #         dict(type='Blur', blur_limit=3, p=1.0),
+            #         dict(type='MedianBlur', blur_limit=3, p=1.0)
+            #     ],
+            #     p=0.1)
+        ],
+        bbox_params=dict(
+            type='BboxParams',
+            format='pascal_voc',
+            label_fields=['gt_labels'],
+            min_visibility=0.0,
+            filter_lost_elements=True),
+        keymap=dict(img='image', gt_bboxes='bboxes'),
+        update_pad_shape=False,
+        skip_img_without_anno=True),
+    dict(type='GtBoxBasedCrop', crop_size=(640, 416)),
+    # dict(type='Resize', img_scale=[(1600, 1064), (800, 532)], keep_ratio=True),
+    dict(type='Resize', img_scale=[(1280, 832), (640, 416)], keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(
         type='Normalize',
@@ -201,7 +241,8 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=(1333, 800),
+        # img_scale=[(1600, 1064), (800, 532)],
+        img_scale=[(1280, 832), (640, 416)],
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -217,72 +258,27 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=2,
-    workers_per_gpu=1,
+    samples_per_gpu=4,
+    workers_per_gpu=2,
     train=dict(
-        type='CocoDataset',
-        ann_file='data/coco/annotations/instances_train2017.json',
-        img_prefix='data/coco/train2017/',
-        pipeline=[
-            dict(type='LoadImageFromFile'),
-            dict(type='LoadAnnotations', with_bbox=True),
-            dict(type='Resize', img_scale=(1333, 800), keep_ratio=True),
-            dict(type='RandomFlip', flip_ratio=0.5),
-            dict(
-                type='Normalize',
-                mean=[123.675, 116.28, 103.53],
-                std=[58.395, 57.12, 57.375],
-                to_rgb=True),
-            dict(type='Pad', size_divisor=32),
-            dict(type='DefaultFormatBundle'),
-            dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
-        ]),
+        type='RepeatDataset',
+        times=3,
+        dataset=dict(
+            type=dataset_type,
+            ann_file=data_root + 'annotations/instances_train2017.json',
+            img_prefix=data_root + 'train2017/',
+            pipeline=train_pipeline)),
     val=dict(
-        type='CocoDataset',
-        ann_file='data/coco/annotations/instances_val2017.json',
-        img_prefix='data/coco/val2017/',
-        pipeline=[
-            dict(type='LoadImageFromFile'),
-            dict(
-                type='MultiScaleFlipAug',
-                img_scale=(1333, 800),
-                flip=False,
-                transforms=[
-                    dict(type='Resize', keep_ratio=True),
-                    dict(type='RandomFlip'),
-                    dict(
-                        type='Normalize',
-                        mean=[123.675, 116.28, 103.53],
-                        std=[58.395, 57.12, 57.375],
-                        to_rgb=True),
-                    dict(type='Pad', size_divisor=32),
-                    dict(type='ImageToTensor', keys=['img']),
-                    dict(type='Collect', keys=['img'])
-                ])
-        ]),
+        type=dataset_type,
+        ann_file=data_root + 'annotations/instances_val2017.json',
+        img_prefix=data_root + 'val2017/',
+        pipeline=test_pipeline),
     test=dict(
-        type='CocoDataset',
-        ann_file='data/coco/annotations/instances_val2017.json',
-        img_prefix='data/coco/val2017/',
-        pipeline=[
-            dict(type='LoadImageFromFile'),
-            dict(
-                type='MultiScaleFlipAug',
-                img_scale=(1333, 800),
-                flip=False,
-                transforms=[
-                    dict(type='Resize', keep_ratio=True),
-                    dict(type='RandomFlip'),
-                    dict(
-                        type='Normalize',
-                        mean=[123.675, 116.28, 103.53],
-                        std=[58.395, 57.12, 57.375],
-                        to_rgb=True),
-                    dict(type='Pad', size_divisor=32),
-                    dict(type='ImageToTensor', keys=['img']),
-                    dict(type='Collect', keys=['img'])
-                ])
-        ]))
+        type=dataset_type,
+        ann_file=data_root + 'annotations/instances_val2017.json',
+        img_prefix=data_root + 'val2017/',
+        pipeline=test_pipeline),
+        )
 evaluation = dict(interval=1, metric='bbox')
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
@@ -290,16 +286,16 @@ lr_config = dict(
     policy='step',
     warmup='linear',
     warmup_iters=500,
-    warmup_ratio=0.0001,
-    step=[20, 23])
-runner = dict(type='EpochBasedRunner', max_epochs=24)
+    warmup_ratio=0.001,
+    step=[8, 11])
+runner = dict(type='EpochBasedRunner', max_epochs=12)
 checkpoint_config = dict(interval=1)
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
 log_level = 'INFO'
 load_from = None
-resume_from = 'checkpoints/epoch_12 (1).pth'
+resume_from = None
 workflow = [('train', 1)]
 opencv_num_threads = 0
 mp_start_method = 'fork'
