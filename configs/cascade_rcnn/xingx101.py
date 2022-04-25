@@ -194,9 +194,9 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='GtBoxBasedCrop', crop_size=(1500,1000)),
+#     dict(type='GtBoxBasedCrop', crop_size=(1500,1000)),
     # dict(type='Resize', img_scale=[(1600, 1064), (800, 532)], keep_ratio=True),
-    dict(type='Resize', img_scale=[(1500,1000), (750,500)], keep_ratio=True),
+    dict(type='Resize', img_scale=[(1500,1000), (3000，2000)], keep_ratio=True),
     dict(type='Albu',
          transforms=albu_train_transforms,
          bbox_params=dict(
@@ -225,7 +225,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=[(1500,1000), (750,500)],
+        img_scale=[(1500,1000), (3000，2000)],
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -259,13 +259,13 @@ data = dict(
         img_prefix='data/coco/val2017/',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
-optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.002, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 lr_config = dict(
     policy='step',
     warmup='linear',
     warmup_iters=500,
-    warmup_ratio=0.001,
+    warmup_ratio=0.0001,
     step=[8, 11])
 runner = dict(type='EpochBasedRunner', max_epochs=12)
 checkpoint_config = dict(interval=1)
