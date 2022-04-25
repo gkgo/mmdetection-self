@@ -194,9 +194,23 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='GtBoxBasedCrop', crop_size=(640,416)),
+    dict(type='Albu',
+         transforms=albu_train_transforms,
+         bbox_params=dict(
+             type='BboxParams',
+             format='pascal_voc',
+             label_fields=['gt_labels'],
+             min_visibility=0.0,
+             filter_lost_elements=True),
+         keymap={
+             'img': 'image',
+             'gt_bboxes': 'bboxes'
+         },
+         update_pad_shape=False,
+         skip_img_without_anno=True),
+    # dict(type='GtBoxBasedCrop', crop_size=(640,416)),
     # dict(type='Resize', img_scale=[(1600, 1064), (800, 532)], keep_ratio=True),
-    dict(type='Resize', img_scale=[(1280,832), (640,416)], keep_ratio=True),
+    dict(type='Resize', img_scale=[(1500,1000), (1200,800)], keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(
         type='Normalize',
@@ -211,7 +225,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=[(1280,832), (640,416)],
+        img_scale=[(1500,1000), (1200,800)],
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -227,7 +241,7 @@ test_pipeline = [
         ])
 ]
 data = dict(
-    samples_per_gpu=4,
+    samples_per_gpu=2,
     workers_per_gpu=1,
     train=dict(
         type='CocoDataset',
@@ -245,7 +259,7 @@ data = dict(
         img_prefix='data/coco/val2017/',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
-optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.0025, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 lr_config = dict(
     policy='step',
