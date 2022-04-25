@@ -194,9 +194,9 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='GtBoxBasedCrop', crop_size=(1500，1000)),
+    dict(type='GtBoxBasedCrop', crop_size=(1500,1000)),
     # dict(type='Resize', img_scale=[(1600, 1064), (800, 532)], keep_ratio=True),
-    dict(type='Resize', img_scale=[(1500，1000), (750，500)], keep_ratio=True),
+    dict(type='Resize', img_scale=[(1500,1000), (750,500)], keep_ratio=True),
     dict(type='Albu',
          transforms=albu_train_transforms,
          bbox_params=dict(
@@ -225,7 +225,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=[(1280,832), (640,416)],
+        img_scale=[(1500,1000), (750,500)],
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
