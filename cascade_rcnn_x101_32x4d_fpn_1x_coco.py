@@ -186,47 +186,9 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(
-        type='Albu',
-        transforms=[
-            dict(
-                type='ShiftScaleRotate',
-                shift_limit=0.0625,
-                scale_limit=0.0,
-                rotate_limit=180,
-                interpolation=1,
-                p=0.5),
-            # dict(
-            #     type='RandomBrightnessContrast',
-            #     brightness_limit=[0.1, 0.3],
-            #     contrast_limit=[0.1, 0.3],
-            #     p=0.2),
-            # dict(
-            #     type='RandomBrightnessContrast',
-            #     brightness_limit=[0.1, 0.3],
-            #     contrast_limit=[0.1, 0.3],
-            #     p=0.2),
-            # dict(type='ChannelShuffle', p=0.1),
-            # dict(
-            #     type='OneOf',
-            #     transforms=[
-            #         dict(type='Blur', blur_limit=3, p=1.0),
-            #         dict(type='MedianBlur', blur_limit=3, p=1.0)
-            #     ],
-            #     p=0.1)
-        ],
-        bbox_params=dict(
-            type='BboxParams',
-            format='pascal_voc',
-            label_fields=['gt_labels'],
-            min_visibility=0.0,
-            filter_lost_elements=True),
-        keymap=dict(img='image', gt_bboxes='bboxes'),
-        update_pad_shape=False,
-        skip_img_without_anno=True),
-    dict(type='GtBoxBasedCrop', crop_size=(640, 416)),
+    dict(type='GtBoxBasedCrop', crop_size=(640,416)),
     # dict(type='Resize', img_scale=[(1600, 1064), (800, 532)], keep_ratio=True),
-    dict(type='Resize', img_scale=[(1280, 832), (640, 416)], keep_ratio=True),
+    dict(type='Resize', img_scale=[(1280,832), (640,416)], keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(
         type='Normalize',
@@ -241,8 +203,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        # img_scale=[(1600, 1064), (800, 532)],
-        img_scale=[(1280, 832), (640, 416)],
+        img_scale=[(1280,832), (640,416)],
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -259,26 +220,22 @@ test_pipeline = [
 ]
 data = dict(
     samples_per_gpu=4,
-    workers_per_gpu=2,
+    workers_per_gpu=1,
     train=dict(
-        type='RepeatDataset',
-        times=3,
-        dataset=dict(
-            type=dataset_type,
-            ann_file=data_root + 'annotations/instances_train2017.json',
-            img_prefix=data_root + 'train2017/',
-            pipeline=train_pipeline)),
+        type='CocoDataset',
+        ann_file='data/coco/annotations/instances_train2017.json',
+        img_prefix='data/coco/train2017/',
+        pipeline=train_pipeline),
     val=dict(
-        type=dataset_type,
-        ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + 'val2017/',
+        type='CocoDataset',
+        ann_file='data/coco/annotations/instances_val2017.json',
+        img_prefix='data/coco/val2017/',
         pipeline=test_pipeline),
     test=dict(
-        type=dataset_type,
-        ann_file=data_root + 'annotations/instances_val2017.json',
-        img_prefix=data_root + 'val2017/',
-        pipeline=test_pipeline),
-        )
+        type='CocoDataset',
+        ann_file='data/coco/annotations/instances_val2017.json',
+        img_prefix='data/coco/val2017/',
+        pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
 optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
