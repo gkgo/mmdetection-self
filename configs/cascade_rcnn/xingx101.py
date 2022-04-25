@@ -194,9 +194,9 @@ img_norm_cfg = dict(
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='GtBoxBasedCrop', crop_size=(1500,1000)),
+    dict(type='GtBoxBasedCrop', crop_size=(640,416)),
     # dict(type='Resize', img_scale=[(1600, 1064), (800, 532)], keep_ratio=True),
-    dict(type='Resize', img_scale=[(1500,1000), (1200,800)], keep_ratio=True),
+    dict(type='Resize', img_scale=[(1280,832), (640,416)], keep_ratio=True),
     dict(type='Albu',
          transforms=albu_train_transforms,
          bbox_params=dict(
@@ -225,7 +225,7 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=[(1500,1000), (1200,800)],
+        img_scale=[(1280,832), (640,416)],
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
@@ -261,13 +261,14 @@ data = dict(
 evaluation = dict(interval=1, metric='bbox')
 optimizer = dict(type='SGD', lr=0.0025, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
+# learning policy
 lr_config = dict(
     policy='step',
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[8, 11])
-runner = dict(type='EpochBasedRunner', max_epochs=12)
+    step=[16, 22])
+runner = dict(type='EpochBasedRunner', max_epochs=24)
 checkpoint_config = dict(interval=1)
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
