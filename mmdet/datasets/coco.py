@@ -22,7 +22,7 @@ from .custom import CustomDataset
 @DATASETS.register_module()
 class CocoDataset(CustomDataset):
 
-    CLASSES = ( '0',
+    CLASSES = (
         '6',
         '7',
         '8',
