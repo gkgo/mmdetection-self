@@ -1,19 +1,26 @@
+albu_train_transforms = [
+    dict(
+        type='ShiftScaleRotate',
+        shift_limit=0.0625,
+        scale_limit=0.0,
+        rotate_limit=180,
+        interpolation=1,
+        p=0.5)]
 model = dict(
     type='CascadeRCNN',
     backbone=dict(
-        type='ResNet',
+        type='ResNeXt',
         depth=101,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
         frozen_stages=1,
-        norm_cfg=dict(type='BN', requires_grad=False),
+        norm_cfg=dict(type='BN', requires_grad=True),
         norm_eval=True,
-        style='caffe',
+        style='pytorch',
         init_cfg=dict(
-            type='Pretrained',
-            checkpoint=
-            'checkpoints/cascade_rcnn_r101_fpn_1x_coco_20200317-0b6a2fbf.pth')
-    ),
+            type='Pretrained', checkpoint='open-mmlab://resnext101_32x4d'),
+        groups=32,
+        base_width=4),
     neck=dict(
         type='FPN',
         in_channels=[256, 512, 1024, 2048],
@@ -34,8 +41,8 @@ model = dict(
             target_stds=[1.0, 1.0, 1.0, 1.0]),
         loss_cls=dict(
             type='CrossEntropyLoss', use_sigmoid=True, loss_weight=1.0),
-        reg_decoded_bbox=True,
-        loss_bbox=dict(type='GIoULoss', loss_weight=5.0)),
+        loss_bbox=dict(
+            type='SmoothL1Loss', beta=0.1111111111111111, loss_weight=1.0)),
     roi_head=dict(
         type='CascadeRoIHead',
         num_stages=3,
@@ -51,7 +58,7 @@ model = dict(
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
-                num_classes=29,
+                num_classes=28,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0.0, 0.0, 0.0, 0.0],
@@ -61,14 +68,14 @@ model = dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
                     loss_weight=1.0),
-                reg_decoded_bbox=True,
-                loss_bbox=dict(type='GIoULoss', loss_weight=5.0)),
+                loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
+                               loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
-                num_classes=29,
+                num_classes=28,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0.0, 0.0, 0.0, 0.0],
@@ -78,14 +85,14 @@ model = dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
                     loss_weight=1.0),
-                reg_decoded_bbox=True,
-                loss_bbox=dict(type='GIoULoss', loss_weight=5.0)),
+                loss_bbox=dict(type='SmoothL1Loss', beta=1.0,
+                               loss_weight=1.0)),
             dict(
                 type='Shared2FCBBoxHead',
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
-                num_classes=29,
+                num_classes=28,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0.0, 0.0, 0.0, 0.0],
@@ -95,8 +102,7 @@ model = dict(
                     type='CrossEntropyLoss',
                     use_sigmoid=False,
                     loss_weight=1.0),
-                reg_decoded_bbox=True,
-                loss_bbox=dict(type='GIoULoss', loss_weight=5.0))
+                loss_bbox=dict(type='SmoothL1Loss', beta=1.0, loss_weight=1.0))
         ]),
     train_cfg=dict(
         rpn=dict(
@@ -105,7 +111,7 @@ model = dict(
                 pos_iou_thr=0.7,
                 neg_iou_thr=0.3,
                 min_pos_iou=0.3,
-                match_low_quality=False,
+                match_low_quality=True,
                 ignore_iof_thr=-1),
             sampler=dict(
                 type='RandomSampler',
@@ -183,19 +189,16 @@ model = dict(
             max_per_img=100)))
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
-img_norm_cfg = dict(
-    mean=[103.53, 116.28, 123.675], std=[1.0, 1.0, 1.0], to_rgb=False)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    dict(type='GtBoxBasedCrop', crop_size=(640, 416)),
-    dict(type='Resize', img_scale=[(1280, 832), (640, 416)], keep_ratio=True),
+    dict(type='Resize', img_scale=[(1500,1000), (1200,800)], keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(
         type='Normalize',
-        mean=[103.53, 116.28, 123.675],
-        std=[1.0, 1.0, 1.0],
-        to_rgb=False),
+        mean=[123.675, 116.28, 103.53],
+        std=[58.395, 57.12, 57.375],
+        to_rgb=True),
     dict(type='Pad', size_divisor=32),
     dict(type='DefaultFormatBundle'),
     dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
@@ -204,106 +207,50 @@ test_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(
         type='MultiScaleFlipAug',
-        img_scale=[(1280, 832), (640, 416)],
+        img_scale=[(1500,1000), (1200,800)],
         flip=False,
         transforms=[
             dict(type='Resize', keep_ratio=True),
             dict(type='RandomFlip'),
             dict(
                 type='Normalize',
-                mean=[103.53, 116.28, 123.675],
-                std=[1.0, 1.0, 1.0],
-                to_rgb=False),
+                mean=[123.675, 116.28, 103.53],
+                std=[58.395, 57.12, 57.375],
+                to_rgb=True),
             dict(type='Pad', size_divisor=32),
             dict(type='ImageToTensor', keys=['img']),
             dict(type='Collect', keys=['img'])
         ])
 ]
 data = dict(
-    samples_per_gpu=4,
+    samples_per_gpu=2,
     workers_per_gpu=2,
     train=dict(
-        type='RepeatDataset',
-        times=3,
-        dataset=dict(
-            type='CocoDataset',
-            ann_file='data/coco/annotations/instances_train2017.json',
-            img_prefix='data/coco/train2017/',
-            pipeline=[
-                dict(type='LoadImageFromFile'),
-                dict(type='LoadAnnotations', with_bbox=True),
-                dict(type='GtBoxBasedCrop', crop_size=(640, 416)),
-                dict(
-                    type='Resize',
-                    img_scale=[(1280, 832), (640, 416)],
-                    keep_ratio=True),
-                dict(type='RandomFlip', flip_ratio=0.5),
-                dict(
-                    type='Normalize',
-                    mean=[103.53, 116.28, 123.675],
-                    std=[1.0, 1.0, 1.0],
-                    to_rgb=False),
-                dict(type='Pad', size_divisor=32),
-                dict(type='DefaultFormatBundle'),
-                dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
-            ])),
+        type='CocoDataset',
+        ann_file='data/coco/annotations/instances_train2017.json',
+        img_prefix='data/coco/train2017/',
+        pipeline=train_pipeline),
     val=dict(
         type='CocoDataset',
-        ann_file='data/coco/annotations/instances_train2017.json',
-        img_prefix='data/coco/train2017/',
-        pipeline=[
-            dict(type='LoadImageFromFile'),
-            dict(
-                type='MultiScaleFlipAug',
-                img_scale=[(1280, 832), (640, 416)],
-                flip=False,
-                transforms=[
-                    dict(type='Resize', keep_ratio=True),
-                    dict(type='RandomFlip'),
-                    dict(
-                        type='Normalize',
-                        mean=[103.53, 116.28, 123.675],
-                        std=[1.0, 1.0, 1.0],
-                        to_rgb=False),
-                    dict(type='Pad', size_divisor=32),
-                    dict(type='ImageToTensor', keys=['img']),
-                    dict(type='Collect', keys=['img'])
-                ])
-        ]),
+        ann_file='data/coco/annotations/instances_val2017.json',
+        img_prefix='data/coco/val2017/',
+        pipeline=test_pipeline),
     test=dict(
         type='CocoDataset',
-        ann_file='data/coco/annotations/instances_train2017.json',
-        img_prefix='data/coco/train2017/',
-        pipeline=[
-            dict(type='LoadImageFromFile'),
-            dict(
-                type='MultiScaleFlipAug',
-                img_scale=[(1280, 832), (640, 416)],
-                flip=False,
-                transforms=[
-                    dict(type='Resize', keep_ratio=True),
-                    dict(type='RandomFlip'),
-                    dict(
-                        type='Normalize',
-                        mean=[103.53, 116.28, 123.675],
-                        std=[1.0, 1.0, 1.0],
-                        to_rgb=False),
-                    dict(type='Pad', size_divisor=32),
-                    dict(type='ImageToTensor', keys=['img']),
-                    dict(type='Collect', keys=['img'])
-                ])
-        ]))
-evaluation = dict(interval=1, metric='mAP')
-optimizer = dict(type='SGD', lr=0.02, momentum=0.9, weight_decay=0.0001)
+        ann_file='data/coco/annotations/instances_val2017.json',
+        img_prefix='data/coco/val2017/',
+        pipeline=test_pipeline))
+evaluation = dict(interval=1, metric='bbox')
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 lr_config = dict(
     policy='step',
     warmup='linear',
     warmup_iters=500,
-    warmup_ratio=0.0001,
-    step=[8, 11])
-runner = dict(type='EpochBasedRunner', max_epochs=16)
-checkpoint_config = dict(interval=2)
+    warmup_ratio=0.001,
+    step=[40, 70])
+runner = dict(type='EpochBasedRunner', max_epochs=80)
+checkpoint_config = dict(interval=10)
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
@@ -313,15 +260,6 @@ resume_from = None
 workflow = [('train', 1)]
 opencv_num_threads = 0
 mp_start_method = 'fork'
-albu_train_transforms = [
-    dict(
-        type='ShiftScaleRotate',
-        shift_limit=0.0625,
-        scale_limit=0.0,
-        rotate_limit=180,
-        interpolation=1,
-        p=0.5)
-]
+work_dir = './work_dirs\cascade_rcnn_x101_32x4d_fpn_20e_coco'
 auto_resume = False
 gpu_ids = [0]
-
