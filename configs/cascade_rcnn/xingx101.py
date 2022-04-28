@@ -1,17 +1,3 @@
-albu_train_transforms = [
-    dict(
-        type='ShiftScaleRotate',
-        shift_limit=0.0625,
-        scale_limit=0.0,
-        rotate_limit=0,
-        interpolation=1,
-        p=0.5),
-    dict(
-        type='RandomBrightnessContrast',
-        brightness_limit=[0.1, 0.3],
-        contrast_limit=[0.1, 0.3],
-        p=0.2)
-]
 model = dict(
     type='CascadeRCNN',
     backbone=dict(
@@ -203,29 +189,9 @@ train_pipeline = [
     dict(type='GtBoxBasedCrop', crop_size=(1500,1000)),
     dict(type='Resize', img_scale=(1200, 800), keep_ratio=True),
     dict(type='Pad', size_divisor=32),
-    dict(
-        type='Albu',
-        transforms=albu_train_transforms,
-        bbox_params=dict(
-            type='BboxParams',
-            format='pascal_voc',
-            label_fields=['gt_labels'],
-            min_visibility=0.0,
-            filter_lost_elements=True),
-        keymap={
-            'img': 'image',
-            'gt_masks': 'masks',
-            'gt_bboxes': 'bboxes'
-        },
-        update_pad_shape=False,
-        skip_img_without_anno=True),
     dict(type='Normalize', **img_norm_cfg),
     dict(type='DefaultFormatBundle'),
-    dict(
-        type='Collect',
-        keys=['img', 'gt_bboxes', 'gt_labels', 'gt_masks'],
-        meta_keys=('filename', 'ori_shape', 'img_shape', 'img_norm_cfg',
-                   'pad_shape', 'scale_factor'))
+    dict(type='Collect', keys=['img', 'gt_bboxes', 'gt_labels'])
 ]
 test_pipeline = [
     dict(type='LoadImageFromFile'),
@@ -269,7 +235,7 @@ data = dict(
         pipeline=test_pipeline),
         )
 evaluation = dict(interval=1, metric='bbox')
-optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 lr_config = dict(
     policy='step',
