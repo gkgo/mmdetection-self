@@ -50,7 +50,7 @@ model = dict(
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
-                num_classes=29,
+                num_classes=28,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0.0, 0.0, 0.0, 0.0],
@@ -67,7 +67,7 @@ model = dict(
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
-                num_classes=29,
+                num_classes=28,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0.0, 0.0, 0.0, 0.0],
@@ -84,7 +84,7 @@ model = dict(
                 in_channels=256,
                 fc_out_channels=1024,
                 roi_feat_size=7,
-                num_classes=29,
+                num_classes=28,
                 bbox_coder=dict(
                     type='DeltaXYWHBBoxCoder',
                     target_means=[0.0, 0.0, 0.0, 0.0],
@@ -181,13 +181,9 @@ model = dict(
             max_per_img=100)))
 dataset_type = 'CocoDataset'
 data_root = 'data/coco/'
-img_norm_cfg = dict(
-    mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
     dict(type='LoadImageFromFile'),
     dict(type='LoadAnnotations', with_bbox=True),
-    # dict(type='GtBoxBasedCrop', crop_size=(640,416)),
-    # dict(type='Resize', img_scale=[(1600, 1064), (800, 532)], keep_ratio=True),
     dict(type='Resize', img_scale=[(1500,1000), (1200,800)], keep_ratio=True),
     dict(type='RandomFlip', flip_ratio=0.5),
     dict(
@@ -220,7 +216,7 @@ test_pipeline = [
 ]
 data = dict(
     samples_per_gpu=2,
-    workers_per_gpu=1,
+    workers_per_gpu=2,
     train=dict(
         type='CocoDataset',
         ann_file='data/coco/annotations/instances_train2017.json',
@@ -237,16 +233,16 @@ data = dict(
         img_prefix='data/coco/val2017/',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
-optimizer = dict(type='SGD', lr=0.0025, momentum=0.9, weight_decay=0.0001)
+optimizer = dict(type='SGD', lr=0.01, momentum=0.9, weight_decay=0.0001)
 optimizer_config = dict(grad_clip=None)
 lr_config = dict(
     policy='step',
     warmup='linear',
     warmup_iters=500,
     warmup_ratio=0.001,
-    step=[16, 19])
-runner = dict(type='EpochBasedRunner', max_epochs=20)
-checkpoint_config = dict(interval=2)
+    step=[40, 70])
+runner = dict(type='EpochBasedRunner', max_epochs=80)
+checkpoint_config = dict(interval=10)
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
