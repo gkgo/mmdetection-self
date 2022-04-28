@@ -8,7 +8,6 @@ def wider_face_classes():
 
 def voc_classes():
     return [
-        '0',
         '6',
         '7',
         '8',
