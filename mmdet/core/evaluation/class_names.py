@@ -106,36 +106,16 @@ def coco_classes():
     #     'oven', 'toaster', 'sink', 'refrigerator', 'book', 'clock', 'vase',
     #     'scissors', 'teddy_bear', 'hair_drier', 'toothbrush'
     # ]
-    return [
-        '6',
-        '7',
-        '8',
-        '9',
-        '10',
-        '25',
-        '41',
-        '105',
-        '110',
-        '115',
-        '148',
-        '156',
-        '222',
-        '228',
-        '235',
-        '256',
-        '280',
-        '310',
-        '387',
-        '392',
-        '394',
-        '398',
-        '401',
-        '402',
-        '430',
-        '480',
-        '485',
-        '673'
-    ]  # 修改为自己的标签
+    return ['冰墩墩', 'Sanyo/三洋', 'Eifini/伊芙丽', 'PSALTER/诗篇', 'Beaster', 'ON/昂跑', 'BYREDO/柏芮朵', 'Ubras', 'Eternelle',
+               'PERFECT DIARY/完美日记', '花西子', 'Clarins/娇韵诗', "L'occitane/欧舒丹", 'Versace/范思哲', 'Mizuno/美津浓', 'Lining/李宁',
+               'DOUBLE STAR/双星', 'YONEX/尤尼克斯', 'Tory Burch/汤丽柏琦', 'Gucci/古驰', 'Louis Vuitton/路易威登', 'CARTELO/卡帝乐鳄鱼',
+               'JORDAN',
+               'KENZO', 'UNDEFEATED', 'BOY LONDON', 'TREYO/雀友', 'carhartt', '洁柔', 'Blancpain/宝珀', 'GXG', '乐町',
+               'Diadora/迪亚多纳',
+               'TUCANO/啄木鸟', 'Loewe', 'Granite Gear', 'DESCENTE/迪桑特', 'OSPREY', 'Swatch/斯沃琪', 'erke/鸿星尔克',
+               'Massimo Dutti',
+               'PINKO', 'PALLADIUM', 'origins/悦木之源', 'Trendiano', '音儿', 'Monster Guardians', '敷尔佳', 'IPSA/茵芙莎',
+               'Schwarzkopf/施华蔻'] # 修改为自己的标签
 
 
 def cityscapes_classes():
