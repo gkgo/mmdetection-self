@@ -280,7 +280,7 @@ lr_config = dict(
     warmup_ratio=0.001,
     step=[24, 40])
 runner = dict(type='EpochBasedRunner', max_epochs=50)
-checkpoint_config = dict(interval=10)
+checkpoint_config = dict(interval=5)
 log_config = dict(interval=50, hooks=[dict(type='TextLoggerHook')])
 custom_hooks = [dict(type='NumClassCheckHook')]
 dist_params = dict(backend='nccl')
