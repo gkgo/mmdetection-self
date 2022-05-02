@@ -187,7 +187,7 @@ model = dict(
             score_thr=0.05,
             nms=dict(type='nms', iou_threshold=0.5),
             max_per_img=100)))
-dataset_type = 'LogDetMini'
+dataset_type = 'CocoDataset'
 img_norm_cfg = dict(
     mean=[123.675, 116.28, 103.53], std=[58.395, 57.12, 57.375], to_rgb=True)
 train_pipeline = [
@@ -245,9 +245,9 @@ test_pipeline = [
         ])
 ]
 datasetA = dict(
-    type=dataset_type,
-    ann_file='data/logdet-mini/train/instances_train2017.json',
-    img_prefix='data/logdet-mini/train/images',
+    type='CocoDataset',
+    ann_file='data/coco/annotations/instances_train2017.json',
+    img_prefix='data/coco/train2017/',
     pipeline=train_pipeline)
 data = dict(
     samples_per_gpu=2,
@@ -260,14 +260,14 @@ data = dict(
             datasets=[datasetA]
         )),
     val=dict(
-        type=dataset_type,
-        ann_file='data/logdet-mini/val/instances_val2017.json',
-        img_prefix='data/logdet-mini/val/images',
+        type='CocoDataset',
+        ann_file='data/coco/annotations/instances_val2017.json',
+        img_prefix='data/coco/val2017/',
         pipeline=test_pipeline),
     test=dict(
-        type=dataset_type,
-        ann_file='data/logdet-mini/val/instances_val2017.json',
-        img_prefix='data/logdet-mini/val/images',
+        type='CocoDataset',
+        ann_file='data/coco/annotations/instances_val2017.json',
+        img_prefix='data/coco/val2017/',
         pipeline=test_pipeline))
 evaluation = dict(interval=1, metric='bbox')
 optimizer = dict(type='SGD', lr=0.005, momentum=0.9, weight_decay=0.0001)
